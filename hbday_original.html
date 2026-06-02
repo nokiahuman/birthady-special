@@ -1,0 +1,1747 @@
+<!-- AURELION code1-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tanishi's Detective Quest 🔍</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;900&family=IM+Fell+English:ital@0;1&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --cork: #3d2410;
+        --cork-light: #5c3820;
+        --parch: #f5e6c8;
+        --parch-dark: #e8d09e;
+        --parch-deep: #c9a96e;
+        --ink: #1e0e06;
+        --ink-faded: #5a3520;
+        --gold: #c9a227;
+        --gold-bright: #f0c040;
+        --gold-dk: #8b6914;
+        --crimson: #8b0000;
+        --crimson-b: #cc2200;
+        --emerald: #1a5c2a;
+        --terminal: #0d1f0d;
+        --term-green: #39ff14;
+        --term-dim: #1a7a10;
+        --string-red: #cc1100;
+        --pin-red: #dd2200;
+        --google-blue: #4285f4;
+        --map-teal: #1a73e8;
+        --midnight: #120808;
+    }
+    *, *::before, *::after {margin:0; padding:0; box-sizing:border-box;}
+    body{
+        font-family: 'IM Fell English', Georgia, serif;
+        min-height: 100vh;
+        background-color: var(--cork);
+        background-image:
+            radial-gradient(ellipse at 15% 20%, rgba(90,50,15,0.6)0%,transparent 45%),
+            radial-gradient(ellipse at 85% 80%,rgba(20,5,0,0.7)0%,transparent 45%),
+            repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.04)3px,rgba(0,0,0,0.04)4px),
+            repeating-linear-gradient(90deg,transparent,transparent 3px,rgba(0,0,0,0.03)3px,rgba(0,0,0,0.03)4px);
+        overflow-x: hidden;
+    }
+    /*--sparks--*/
+    #sparks {position:fixed; inset:0;pointer-events:none; z-index:0; overflow:hidden;}
+    .spark{
+        position:absolute; border-radius:50%; background:var(--gold-bright);
+        animation: floatsparks linear infinite;
+        opacity:0;
+    }
+    @keyframes floatSpark {
+        0%{transform:translateY(100vh) scale(0);opacity:0;}
+        10%{opacity:0.6;}
+        90%{opacity:0.3;}
+        100%{transform:translateY(-10vh)scale(1.5);opacity:0;}
+    }
+    /*-torches-*/
+    .wall-torch{
+        position:fixed;top:50%;transform:translateY(-50%);z-index:5;pointer-events:none;
+    }
+    .wall-torch.left{left:12px;}
+    .wall-torch.right{right:12px;}
+    .torch-body{font-size:2.2rem;animation:torchFlicker 0.12s ease-in-out infinite alternate;filter:drop-shadow(0 0 14px #ff7700);}
+    .torch-glow{
+        position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+        width:80px;height:80px;border-radius:50%;
+        background:radial-gradient(circle,rgba(255,150,0,0.25)0%,transparent 70%);
+        animation:glowPulse 1s ease-in-out infinite alternate;
+
+    }
+    @keyframes torchFlicker {
+        from{transform:scale(1)rotate(-3deg);filter:drop-shadow(0 0 10px #ff7700);}
+        to{transform:scale(1.1)rotate(3deg);filter:drop-shadow(0 0 22px #ffaa00);}
+
+    }
+    @keyframes glowPulse{from{opacity:0.5;}to{opacity:1;}}
+    /*main wrap*/
+    #game{
+        position:relative; z-index:10;
+        min-height:100vh;
+        display:flex; flex-direction:column;align-items:center;justify-content:center;
+        padding:20px 75px;
+        gap:0;
+
+    }
+    /*scr*/
+    .screen{display:none; width:100%; max-width:820px; flex-direction:column;align-items:center;}
+    .screen.active{display:flex;animation:fadeUp 0.55s cubic-bezier(.22,1,.36,1) both;}  
+    @keyframes fadeUp{
+        from{opacity:0;transform:scale(0.94)translateY(28px);}
+        to{opacity:1;transform:scale(1)translateY(0);}
+    }
+    /*parch*/
+    .parchment{
+        width:100%;
+        background:
+            radial-gradient(ellipse at 8% 8%,#fdf4e0 0%,transparent 40%),
+            radial-gradient(ellipse at 92% 92%,#dfc87a 0%,transparent 40%),
+            linear-gradient(150deg,#f5e6c8 0%,#edd9a0 50%,#e2c87a 100%);
+        border-radius:3px;
+        padding:44px 50px;
+        position:relative;
+        box-shadow:
+            0 0 0 2px var(--gold-dk),
+            0 0 0 5px var(--parch-dark),
+            0 0 0 7px var(--gold-dk),
+            inset 0 0 50px rgba(180,130,50,0.2),
+            0 18px 55px rgba(0,0,0,0.75),
+            0 0 90px rgba(201,162,39,0.1);
+    }
+    /*push pin*/
+    .parchment::before{
+        content:''; position:absolute;
+        width:18px; height:18px; border-radius:50%;
+        background:radial-gradient(circle at 35% 35%,#ff6666, var(--pin-red)55%, #660000);
+        top:-9px;left:50%;transform:translateX(-50%);
+        box-shadow:0 3px 8px rgba(0,0,0,0.5),inset 0 -1px 2px rgba(255,255,255,0.2);
+        z-index:20;
+
+    }
+    .parchment-inner-border{
+        position:absolute; inset:14px;
+        border:1px solid rgba(139,105,20,0.35);
+        border-radius:2px; pointer-events:none;
+    }
+    .corner{position:absolute;color:var(--gold-dk);font-size:1rem;opacity:0.55;}
+    .corner.tl{top:7px;left:16px;}
+    .corner.tr{top:7px;right:16px;}
+    .corner.bl{bottom:7px;left:16px;}
+    .corner.br{bottom:7px;right:16px;}
+    /*tracker*/
+    #progress-wrap{width:100%;max-width:820px;margin-bottom:16px;}
+    #progress-track{
+        display:flex; align-items:center;justify-content:center;
+        padding:10px 0;
+
+    }
+    .prog-node{
+        display:flex; flex-direction:column;align-items:center;gap:3px;
+        position:relative;
+    }
+    .prog-icon{
+        width:42px;height:42px;border-radius:50%;
+        display:flex; align-items:center;justify-content:center;
+        font-size:1.3rem;
+        background:rgba(0,0,0,0.4);
+        border:2px solid rgba(139,105,20,0.3);
+        transition:all 0.5s ease;
+        filter:grayscale(1)brightness(0.4);
+
+
+    }
+    .prog-icon.done{
+        background:radial-gradient(circle,#3d1a00 0%,#1a0a00 100%);
+        border-color:var(--gold);
+        filter: none;
+        box-shadow:0 0 12px rgba(201,162,39,0.5);
+        animation:iconPop 0.4s cubic-bezier(.34,1.56,.64,1);
+
+    }
+    .prog-icon.active{
+        background:radial-gradient(circle,#3d1a00 0%, #1a0a00 100%);
+        border-color:var(--gold-bright);
+        filter:none;
+        box-shadow: 0 0 18px rgba(240,192,64,0.7);
+        animation:iconGlow 1s ease-in-out infinite alternate;
+
+    }
+    @keyframes iconPop{from{transform:scale(0.5);}to{transform:scale(1)}}
+    @keyframes iconGlow{from{box-shadow:0 0 12px rgba(240,192,64,0.5);}to{box-shadow:0 0 24px rgba(240,192,64,0.9);}}
+    .prog-label{
+        font-family:'Cinzel',serif; font-size:0.55rem; color:var(--parch-deep);
+        letter-spacing:0.1em; text-transform:uppercase; text-align:center;
+    }
+    .prog-string {
+        height:2px; flex:1; min-width:22px; max-width:40px;
+        background: var(--string-red);
+        opacity:0.2; transition:opacity 0.5s;
+        position:relative; top:-10px;
+    }
+    .prog-string.done{opacity:0.8;}
+    /*honour*/
+    #honour-bar{
+        width:100%;max-width:820px;
+        display:flex;align-items:center;justify-content:flex-end;
+        margin-bottom:8px;
+        font-family:'Cinzel',serif;font-size:0.78rem;color:var(--parch-deep);
+        letter-spacing:0.08em;
+    }
+/*typography*/
+.title-hero{
+    font-family:'Cinzel Decorative',serif;
+    font-size:clamp(2rem,5.5vw,3.4rem);
+    color:var(--gold-dk);
+    text-align:center; line-height:1.2;
+    text-shadow: 1px 1px 0 rgba(139,105,20,0.4),0 0 30px rgba(201,162,39,0.2);
+
+}
+.title-sub{
+    font-family:'Cinzel',serif;font-size:clamp(0.8rem,2vw,1rem);
+    color:var(--ink-faded);text-align:center;
+    letter-spacing:0.18em; text-transform:uppercase;margin-top:5px;
+}
+.divider{text-align:center;color:var(--gold-dk);letter-spacing:0.35em;opacity:0.65;margin:16px 0;font-size:1rem;}
+.quest-badge{
+    display:inline-flex;align-items:center; gap:7px;
+    font-family:'Cinzel',serif;font-size:0.7rem; font-weight:700;
+    letter-spacing:0.15em; text-transform:uppercase;
+    padding:5px 14px;border-radius:2px;margin-bottom:14px;
+    border:1px solid currentColor;
+}
+.badge-riddle { color:#7a4400; background:rgba(122,68,0,0.12); border-color:rgba(122,68,0,0.4); }
+.badge-maps { color:var(--map-teal); background:rgba(26,115,232,0.1); border-color:rgba(26,115,232,0.4); }
+.badge-search { color:var(--google-blue); background:rgba(66,133,244,0.08); border-color:rgba(66,133,244,0.35); }
+.badge-wiki { color:#3366cc; background:rgba(51,102,204,0.1); border-color:rgba(51,102,204,0.4); }
+.badge-code { color:var(--term-green); background:rgba(57,255,20,0.06); border-color:rgba(57,255,20,0.3); }
+.badge-final { color:var(--crimson-b); background:rgba(204,34,0,0.08); border-color:rgba(204,34,0,0.4); }
+.chamber-title{
+    font-family:'Cinzel Decorative',serif;
+    font-size:clamp(1.2rem,3vw,1.65rem);
+    color:var(--crimson);text-align:center;
+    text-shadow:1px 1px 0 rgba(139,0,0,0.2);
+    margin-bottom:4px;
+}
+.chamber-num{
+    font-family:'Cinzel',serif; font-size:0.7rem;
+    color:var(--ink-faded);text-align:center;
+    letter-spacing:0.2em;text-transform:uppercase;
+    margin-bottom:18px;
+}
+/*riddle*/
+.clue-verse{
+    font-size:clamp(0.95rem,2.2vw,1.08rem);
+    color:var(--ink);line-height:1.85;
+    text-align:center;font-style:italic;
+    padding:18px 22px;
+    border-top:1px solid rgba(139,105,20,0.3);
+    border-bottom:1px solid rgba(139,105,20,0.3);
+    margin:14px 0;
+    position:relative;
+    min-height:60px;
+}
+.clue-verse::before{content:'"';font-size:3rem;color:var(--gold-dk);opacity:0.2;position:absolute;top:-5px;line-height:1;font-style:normal;}
+.clue-verse::after{ content:'"'; font-size:3rem; color:var(--gold-dk); opacity:0.2; position:absolute; bottom:-15px; right:5px; line-height:1; font-style:normal; }
+/*maps card*/
+.map-card{
+    background:linear-gradient(135deg,#0d1a2e 0%,#1a2d4a 100%);
+    border:2px solid var(--map-teal);
+    border-radius:6px; padding:20px 24px;
+    margin:16px 0;
+    box-shadow: 0 0 20px rgba(26,115,232,0.2),inset 0 0 30px rgba(0,0,0,0.3);
+    position:relative; overflow:hidden;
+}
+.map-card::before{
+    content:'';
+    position:absolute;inset:0;
+    background:repeating-linear-gradient(0deg,rgba(26,115,232,0.04) 0,rgba(26,115,232,0.04) 1px,transparent 1px,transparent 30px),
+    repeating-linear-gradient(90deg,rgba(26,115,232,0.04) 0,rgba(26,115,232,0.04) 1px,transparent 1px,transparent 30px);
+    pointer-events:none;
+}
+.coord-label{
+    font-family:'Cinzel',serif;font-size:0.65rem;
+    color:rgba(26,115,232,0.7);letter-spacing:0.2em;text-transform:uppercase;
+    margin-bottom:6px;
+
+}
+.coord-value{
+    font-family:'Special Elite', monospace; font-size:1.3rem;
+    color:#70b8ff; letter-spacing:0.05em; margin-bottom:14px;  
+}
+.map-clue-text {
+    font-family:'IM Fell English',serif;font-style:italic;
+    color:rgba(200,230,255,0.7);font-size:0.9rem;line-height:1.6;
+    border-top:1px solid rgba(26,115,232,0.2);padding-top:10px;margin-top:4px;
+}
+.earth-card {
+    background:linear-gradient(135deg,#0a1628 0%,#142a4a 55%,#1a3d5c 100%);
+    border:2px solid #4a9eff;border-radius:6px;
+    padding:16px 20px;margin:12px 0;
+    box-shadow:0 0 24px rgba(74,158,255,0.2);
+}
+.earth-card-title {
+    font-family:'Cinzel',serif;font-size:0.72rem;
+    color:#7ec8ff;letter-spacing:0.18em;text-transform:uppercase;
+    margin-bottom:10px;
+}
+.earth-step-list { list-style:none; padding:0; margin:0; }
+.earth-step-item {
+    display:flex;gap:10px;align-items:flex-start;
+    font-size:0.86rem;color:rgba(200,230,255,0.85);line-height:1.5;
+    margin-bottom:8px;padding:6px 0;
+    border-bottom:1px solid rgba(74,158,255,0.15);
+}
+.earth-step-item:last-child{ border-bottom:none; }
+.earth-step-item.done{ opacity:0.55;}
+.earth-step-item.done .earth-check{ color:#5cff8a; }
+.earth-check{flex-shrink:0; color:#4a9eff;}
+.btn-earth{
+    background:linear-gradient(135deg,#1a4a6a 0%,#2d7ab8 50%,#1a4a6a 100%);
+    color:#fff;font-size:0.78rem;padding:9px 16px;
+    box-shadow:0 3px 0 rgba(5,30,60,0.45);
+}
+.ping-dot {
+    display:inline-block;width:10px;height:10px;border-radius:50%;
+    background:var(--crimson-b);margin-right:6px;
+    animation:ping 1.2s ease-in-out infinite;
+}
+@keyframes ping {
+    0%,100% {transform:scale(1);box-shadow:0 0 0 0 rgba(204,34,0,0.7);}
+    50% {transform:scale(1.2);box-shadow:0 0 0 6px rgba(204,34,0,0);}
+}
+/*google search*/
+.search-card {
+    background:#fff;
+    border-radius:24px;
+    padding:14px 20px;
+    margin:16px 0;
+    box-shadow:0 2px 12px rgba(0,0,0,0.2);
+    display:flex;align-items:center; gap:12px;
+}
+.google-g {
+    font-family:'Cinzel Decorative', serif;
+    font-size:1.3rem;font-weight:900;
+    background:linear-gradient(135deg,#4285f4 25%,#ea4335 25%,#ea4335 50%,#fbbc04 50%,#fbbc04 75%,#34a853 75%);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;flex-shrink:0;
+}
+.search-query {
+    font-family:'Special Elite',monospace;
+    font-size:0.88rem;color:#333;flex:1;
+    word-break:break-word;line-height:1.4;
+}
+
+.search-anachronism {
+    font-family:'Cinzel',serif;font-size:0.65rem;
+    color:var(--ink-faded);text-align:center;font-style:italic;
+    margin-bottom:8px;opacity:0.7;
+}
+/*terminal*/
+.terminal-card {
+    background:var(--terminal);
+    border:2px solid var(--term-dim);
+    border-radius:6px;padding:20px 22px;
+    margin:16px 0;
+    font-family:'Special Elite', monospace;
+    box-shadow:0 0 20px rgba(57,255,20,0.12), inset 0 0 40px rgba(0,0,0,0.4);
+}
+.term-header {
+    background:linear-gradient(90deg, #1a3a1a, #0d1f0d);
+    margin:-20px -22px 14px;
+    padding:8px 16px;
+    border-bottom:1px solid var(--term-dim);
+    display:flex;align-items:center; gap:6px;
+}
+.term-dot{width:10px;height:10px;border-radius:50%;}
+.term-line{
+    color:var(--term-green);font-size:0.85rem;line-height:1.9;
+    text-shadow:0 0 8px rgba(57,255,20,0.5);
+}
+.term-line.dim{color:var(--term-dim); }
+.term-line.cmd{color:#a0ffb0; }
+.term-line.warn{ color:#ffcc00; text-shadow:0 0 8px rgba(255,204,0,0.4); }
+.cursor-blink::after{
+    content:'▋';animation:blink 1s step-end infinite;
+}
+@keyframes blink {50%{opacity:0;}}
+.key-combo{
+    display:inline-block;background:rgba(57,255,20,0.1);
+    border:1px solid var(--term-dim);border-radius:3px;
+    padding:1px 8px;font-size:0.82rem;
+    color:var(--term-green);margin:2px;
+}
+/*evidence*/
+#evidence-log {
+    width:100%;max-width:820px;
+    background:rgba(0,0,0,0.35);
+    border:1px solid rgba(139,105,20,0.2);
+    border-radius:3px;padding:8px 16px;
+    margin-top:14px;
+    display:none;
+}
+.evidence-title{
+    font-family:'Cinzel',serif;font-size:0.62rem;
+    color:var(--gold-dk);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:6px;
+}
+.evidence-item {
+    font-family:'Special Elite',monospace;font-size:0.78rem;
+    color:var(--parch-dark);margin-bottom:3px;
+    display:flex; gap:8px;align-items:flex-start;
+    animation: evidenceIn 0.4s ease both;
+}
+@keyframes evidenceIn {from{opacity:0;transform:translateX(-10px);}to{opacity:1;transform:translateX(0); } }
+.evidence-stamp{color:var(--emerald); flex-shrink:0; }
+/*Input and buttons*/
+.answer-wrap{display:flex;gap:10px;margin:18px 0 10px; }
+.answer-input{
+    flex:1;background:rgba(255,255,255,0.42);
+    border:2px solid var(--gold-dk);
+    border-radius:3px; padding:12px 18px;
+    font-family:'Cinzel', serif; font-size:0.95rem;
+    color:var(--ink); outline:none;
+    transition:all 0.2s;
+    box-shadow: inset 0 2px 5px rgba(139,105,20,0.12);
+}
+.answer-input:focus {
+    border-color:var(--gold);
+    box-shadow: 0 0 0 3px rgba(201,162,39,0.22), inset 0 2px 5px rgba(139,105,20,0.12);
+}
+.answer-input::placeholder { color:var(--parch-deep); font-style:italic; }
+
+.btn {
+    font-family:'Cinzel', serif; font-size:0.85rem; font-weight:700;
+    padding:11px 22px; border:none; border-radius:3px;
+    cursor:pointer; letter-spacing:0.08em; text-transform:uppercase;
+    transition:all 0.14s; position:relative; overflow:hidden;
+}
+.btn::after{ content:''; position:absolute; inset:0; background:rgba(255,255,255,0); transition:0.14s; }
+.btn:hover::after{ background:rgba(255,255,255,0.12); }
+.btn:active{transform:scale(0.97);}
+.btn-gold{
+    background:linear-gradient(135deg, var(--gold-dk) 0%, var(--gold) 50%, var(--gold-dk) 100%);
+    color:var(--ink);
+    box-shadow:0 3px 0 rgba(100,70,10,0.5),0 6px 14px rgba(201,162,39,0.25);
+}
+.btn-gold:hover{transform:translateY(-1px);box-shadow:0 4px 0 rgba(100,70,10,0.5),0 8px 18px rgba(201,162,39,0.35);}
+.btn-maps{
+    background:linear-gradient(135deg,#1557b0 0%,#1a73e8 50%,#1557b0 100%);
+    color:#fff;font-size:0.78rem;padding:9px 16px;
+    box-shadow: 0 3px 0 rgba(10,40,100,0.4);
+}
+.btn-search{
+    background:linear-gradient(135deg,#2d6a2d 0%,#34a853 50%,#2d6a2d 100%);
+    color:#fff;font-size:0.78rem;padding:9px 16px;
+    box-shadow:0 3px 0 rgba(0,60,10,0.4);
+}
+.btn-hint{
+    background:linear-gradient(135deg,#4a2a00 0%,#7a4400 50%,#4a2a00 100%);
+    color:var(--parch-dark);font-size:0.72rem;padding:8px 14px;
+    box-shadow:0 2px 0 rgba(30,10,0,0.5);
+}
+.btn-copy{
+    background:rgba(0,0,0,0.25);color:var(--parch-dark);
+    font-size:0.7rem;padding:8px 12px;
+    border:1px solid rgba(255,255,255,0.1);
+}
+.btn-row{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin-top:12px;}
+/*feedback*/
+.feedback{
+    min-height:46px;padding:10px 16px;border-radius:3px;
+    font-size:0.92rem;text-align:center;font-style:italic;
+    transition:all 0.3s; opacity:0;
+}
+.feedback.show{ opacity:1;}
+.feedback.wrong{background:rgba(139,0,0,0.1); border:1px solid rgba(139,0,0,0.3); color:var(--crimson); }
+.feedback.correct{background:rgba(26,92,42,0.1); border:1px solid rgba(26,92,42,0.4); color:var(--emerald); }
+.feedback.hint-fb{background:rgba(100,65,0,0.1); border:1px solid rgba(139,105,20,0.35); color:var(--ink-faded); }
+/*vfx*/
+@keyframes shake{
+    0%,100%{transform:translateX(0);}
+    15%{transform:translateX(-9px) rotate(-0.5deg);}
+    30%{transform:translateX(9px) rotate(0.4deg);}
+    45%{transform:translateX(-5px);}
+    60%{transform:translateX(5px);}
+    75%{transform:translateX(-2px);}
+}
+@keyframes goldFlash {
+    0% {box-shadow:0 0 0 2px var(--gold-dk),0 0 0 5px var(--parch-dark), 0 0 0 7px var(--gold-dk), inset 0 0 50px rgba(180,130,50,0.2), 0 18px 55px rgba(0,0,0,0.75); }
+    50% {box-shadow:0 0 0 2px var(--gold-bright),0 0 0 9px rgba(240,192,64,0.5), 0 0 0 14px rgba(240,192,64,0.2), inset 0 0 70px rgba(240,192,64,0.45), 0 18px 55px rgba(0,0,0,0.75),0 0 100px rgba(240,192,64,0.5); }
+    100% {box-shadow:0 0 0 2px var(--gold-dk),0 0 0 5px var(--parch-dark), 0 0 0 7px var(--gold-dk), inset 0 0 50px rgba(180,130,50,0.2), 0 18px 55px rgba(0,0,0,0.75);}
+}
+.shake{ animation: shake 0.5s ease-in-out; }
+.gold-flash{ animation: goldFlash 0.75s ease-in-out; }
+/*intro*/
+.wizard-emoji{ font-size:4.5rem; display:block; text-align:center; margin:8px 0;
+    animation:wizFloat 3.5s ease-in-out infinite;
+    filter:drop-shadow(0 0 18px rgba(201,162,39,0.7));
+}
+@keyframes wizFloat {
+    0%,100%{ transform:translateY(0) rotate(-2deg); }
+    50% { transform:translateY(-10px) rotate(2deg); }
+}
+.intro-body{font-size:1.02rem; color:var(--ink-faded); line-height:1.82; margin:14px 0; }
+.name-glow{
+    font-family:'Cinzel Decorative', serif; color:var(--crimson); font-size:1.25rem;
+    text-shadow:0 0 18px rgba(139,0,0,0.35);
+}
+.reveal-line{ opacity:0; transform:translateY(10px);transition:opacity 0.45s ease,transform 0.45s ease; }
+.reveal-line.vis{ opacity:1; transform:translateY(0);}
+/*dossier*/
+.case-dossier {
+    background:rgba(0,0,0,0.18); border:1px dashed rgba(139,105,20,0.4);
+    border-radius:3px; padding:14px 18px; margin:14px 0;
+    font-family:'Special Elite', monospace; font-size:0.82rem;
+    color:var(--ink-faded); line-height:1.7;
+}
+.case-dossier .case-row { display:flex; gap:10px; margin-bottom:4px; }
+.case-dossier .case-key { color:var(--gold-dk); font-weight:bold; flex-shrink:0; }
+/*victory*/
+.victory-crown { font-size:5rem; display:block; text-align:center; margin:8px 0;
+  animation:crownSpin 1s ease-in-out infinite alternate;
+  filter:drop-shadow(0 0 22px rgba(240,192,64,0.9));
+}
+@keyframes crownSpin {
+    from{ transform:scale(1) rotate(-3deg); }
+    to{ transform:scale(1.1) rotate(3deg); }
+}
+.bday-msg{font-size:clamp(0.93rem,2.1vw,1.08rem); color:var(--ink); line-height:1.88; margin:16px 0; font-style:italic; }
+.bday-msg strong{ font-family:'Cinzel',serif; color:var(--crimson); font-style:normal; font-size:1.05em; }
+.rank-badge{
+    font-family:'Cinzel', serif; font-size:0.78rem;
+    color:var(--gold-dk); text-align:center; letter-spacing:0.12em;
+    margin-top:10px; padding:8px; border:1px solid rgba(139,105,20,0.3);
+    background:rgba(0,0,0,0.08);
+}
+/*confetti*/
+#confetti-box { position:fixed; inset:0; pointer-events:none; z-index:999; overflow:hidden; }
+.confetto {
+    position:absolute; top:-20px; border-radius:2px;
+    animation:confettiFall linear forwards;
+}
+@keyframes confettiFall {
+    0% {opacity:1;transform:translateY(0) rotate(0deg); }
+    85% {opacity:1;}
+    100% {opacity:0;transform:translateY(110vh) rotate(720deg); }
+}
+/*meter and timer*/
+#detective-hud {
+    width:100%; max-width:820px;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    margin-bottom:6px; flex-wrap:wrap;
+}
+.hud-block {
+    font-family:'Cinzel', serif; font-size:0.72rem;
+    color:var(--parch-deep); letter-spacing:0.1em;
+    display:flex;align-items:center; gap:8px;
+}
+#detective-meter {
+    flex:1; min-width:140px; max-width:280px; height:10px;
+    background:rgba(0,0,0,0.35); border:1px solid rgba(139,105,20,0.35);
+    border-radius:2px; overflow:hidden;
+}
+#detective-meter-fill {
+    height:100%; width:0%;
+    background:linear-gradient(90deg, var(--gold-dk), var(--gold-bright));
+    transition:width 0.6s cubic-bezier(.22,1,.36,1);
+    box-shadow:0 0 10px rgba(240,192,64,0.5);
+}
+#streak-badge {
+    color:var(--gold-bright); font-weight:700;
+    opacity:0; transition:opacity 0.3s;
+}
+#streak-badge.hot{opacity:1;animation:iconGlow 0.8s ease-in-out infinite alternate;}
+
+/*cipher*/
+#cipher-strip {
+    width:100%;max-width:820px;
+    display:flex;justify-content:center; gap:6px;
+    margin-bottom:10px;flex-wrap:wrap;
+}
+.cipher-slot {
+    width:36px;height:42px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Cinzel Decorative',serif; font-size:1.1rem;
+    color:var(--parch-deep);opacity:0.35;
+    border:1px dashed rgba(139,105,20,0.35);
+    border-radius:3px;background:rgba(0,0,0,0.2);
+    transition:all 0.5s cubic-bezier(.34,1.56,.64,1);
+}
+.cipher-slot.found {
+    opacity:1;color:var(--gold-bright);
+    border-color:var(--gold); border-style:solid;
+    background:radial-gradient(circle,#3d1a00, #1a0a00);
+    box-shadow:0 0 14px rgba(240,192,64,0.45);
+    animation: iconPop 0.45s cubic-bezier(.34,1.56,.64,1);
+}
+/*wax seal*/
+#seal-overlay {
+    position:fixed;inset:0; z-index:800;
+    display:none;align-items:center;justify-content:center;
+    background:rgba(8,4,2,0.88);
+    backdrop-filter:blur(4px);
+}
+#seal-overlay.active { display:flex; animation: fadeUp 0.35s ease both; }
+.seal-disc {
+    width:130px;height:130px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #cc2200, #660000 70%);
+    border:4px solid #3d0000;
+    display:flex;align-items:center; justify-content:center;
+    font-size:3.2rem;
+    box-shadow:0 0 40px rgba(204,34,0,0.6), inset 0 -8px 20px rgba(0,0,0,0.4);
+    animation: sealPulse 0.9s ease-in-out infinite alternate;
+}
+.seal-disc.breaking{ animation: sealBreak 0.85s cubic-bezier(.22,1,.36,1) forwards;}
+@keyframes sealPulse{
+    from { transform:scale(1) rotate(-4deg); }
+    to{ transform:scale(1.06) rotate(4deg); }
+}
+@keyframes sealBreak {
+    0% { transform:scale(1); opacity:1; filter:blur(0); }
+    40%{ transform:scale(1.15); opacity:1; }
+    100%{ transform:scale(2.4); opacity:0; filter:blur(8px); }
+}
+.seal-msg {
+    position:absolute;bottom:28%;
+    font-family:'Cinzel Decorative',serif;
+    color:var(--gold-bright); font-size:clamp(1rem,3vw,1.35rem);
+    letter-spacing:0.12em; text-align:center; text-shadow:0 0 20px rgba(240,192,64,0.5);
+}
+/*scratch kard*/
+.scratch-wrap{ position:relative; margin:16px 0; border-radius:6px; overflow:hidden; }
+.scratch-canvas{
+    position:absolute; inset:0; z-index:5;cursor:crosshair;touch-action:none;
+}
+.scratch-hint {
+    position:absolute; top:8px; right:10px; z-index:6;
+    font-family:'Cinzel', serif; font-size:0.6rem;
+    color:rgba(255,255,255,0.7); letter-spacing:0.1em;
+    text-transform:uppercase; pointer-events:none;
+    animation: iconGlow 1.2s ease-in-out infinite alternate;
+}
+.scratch-revealed .scratch-canvas{display:none;}
+.scratch-revealed .scratch-hint{display:none;}
+/*wiki hunt*/
+.wiki-card {
+    background:linear-gradient(135deg, #f8f9fa 0%, #eaecf0 100%);
+    border:2px solid #a2a9b1;
+    border-radius:6px; padding:18px 22px; margin:14px 0;
+    box-shadow:0 4px 18px rgba(0,0,0,0.15);
+}
+.wiki-header{
+    display:flex; align-items:center;gap:10px; margin-bottom:12px;
+    font-family:'Cinzel', serif;font-size:0.85rem; color:#202122;
+}
+.wiki-w{ font-size:1.6rem; font-weight:900; color:#202122; }
+.wiki-title{ font-weight:700; color:#3366cc; text-decoration:underline; }
+.hunt-steps{
+    list-style:none;margin:14px 0;padding:0;
+    border-top:1px solid rgba(139,105,20,0.25);
+    padding-top:12px;
+}
+.hunt-step {
+    display:flex;gap:12px;align-items:flex-start;
+    margin-bottom:10px;font-size:0.9rem;color:var(--ink); line-height:1.55;
+}
+.hunt-step-num {
+    flex-shrink:0;width:26px;height:26px; border-radius:50%;
+    background:var(--gold-dk);color:var(--parch);
+    font-family:'Cinzel',serif;font-size:0.75rem;font-weight:700;
+    display:flex; align-items:center;justify-content:center;
+}
+.hunt-step.done .hunt-step-num{ background:var(--emerald); }
+.hunt-step.done{ opacity:0.65; }
+.wiki-riddle{
+    font-size:clamp(0.9rem,2vw,1.02rem);
+    color:var(--ink);line-height:1.85; font-style:italic;
+    padding:16px 18px;margin:12px 0;
+    border:1px dashed rgba(139,105,20,0.45);
+    background:rgba(0,0,0,0.04);
+    border-radius:3px;
+}
+.wiki-riddle strong{ font-style:normal; color:var(--crimson); }
+.wiki-oath{
+    display:flex;align-items:flex-start;gap:10px;
+    margin:14px 0 8px; padding:12px 14px;
+    border:1px solid rgba(139,105,20,0.35);
+    background:rgba(139,0,0,0.05);
+    border-radius:3px; font-size:0.88rem;line-height:1.55;
+    color:var(--ink-faded);cursor:pointer;
+}
+.wiki-oath input { margin-top:4px; accent-color:var(--crimson); flex-shrink:0; }
+.wiki-oath em { color:var(--crimson); font-style:normal; font-weight:bold; }
+.wiki-personal{
+    font-family:'IM Fell English',serif;font-style:italic;
+    font-size:0.95rem;color:var(--ink);line-height:1.75;
+    padding:14px 16px;margin-bottom:12px;
+    border-left:3px solid var(--gold-dk);
+    background:rgba(201,162,39,0.08);
+}
+.btn-wiki{
+    background:linear-gradient(135deg,#2a4a8a 0%,#3366cc 50%,#2a4a8a 100%);
+    color:#fff;font-size:0.78rem; padding:9px 16px;
+    box-shadow:0 3px 0 rgba(10,30,80,0.4);
+}
+/*quick pick*/
+.quick-picks {
+    display:grid;grid-template-columns:1fr 1fr; gap:8px;
+    margin:12px 0 4px;
+}
+.quick-pick {
+    font-family:'Cinzel',serif;font-size:0.78rem;
+    padding:10px 12px; border-radius:3px; cursor:pointer;
+    background:rgba(255,255,255,0.35);
+    border:2px solid rgba(139,105,20,0.35);
+    color:var(--ink);transition:all 0.15s;
+    text-align:center;
+}
+.quick-pick:hover{border-color:var(--gold);background:rgba(240,192,64,0.15); transform:translateY(-1px); }
+.quick-pick:active{transform:scale(0.97); }
+/*first try*/
+.first-try-toast{
+    position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-80px);
+    z-index:700;padding:10px 22px;
+    font-family:'Cinzel',serif;font-size:0.82rem;
+    color:var(--gold-bright);letter-spacing:0.1em;
+    background:rgba(30,14,6,0.92);border:1px solid var(--gold);
+    border-radius:3px; box-shadow:0 8px 30px rgba(0,0,0,0.6);
+    transition:transform 0.45s cubic-bezier(.34,1.56,.64,1);
+    pointer-events:none;
+}
+.first-try-toast.show{transform:translateX(-50%) translateY(0);}
+/*responce*/
+@media(max-width:640px){
+    #game{padding:15px 18px;}
+    .parchment{padding:30px 22px;}
+    .wall-torch{display:none;}
+    .answer-wrap{flex-direction:column;}
+    .btn-row{flex-direction:column;align-items:stretch;}
+    .search-card{flex-direction:column;gap:6px;}
+}
+</style>
+</head>
+<body>
+<div id="sparks"></div>
+<div id="confetti-box"></div>
+<div id="seal-overlay"><div class="seal-disc" id="seal-disc">🔐</div><div class="seal-msg" id="seal-msg">Breaking the seal...</div></div>
+<div class="first-try-toast" id="first-try-toast">✨First try deduction! +10 Insight</div>
+<div class="wall-torch left"><div class="torch-glow"></div><div class="torch-body">🔥</div></div>
+<div class="wall-torch right"><div class="torch-glow"></div><div class="torch-body">🔥</div></div>
+<div id="game">
+    <!--detective-->
+    <div id="detective-hud" style="display:none;">
+        <div class="hud-block">🕵️‍♀️ Insight<div id="detective-meter"><div id="detective-meter-fill"></div></div> <span id="detective-score">0</span></div>
+        <div class="hud-block">⏱️<span id="timer-display">00:00</span></div>
+        <div class="hud-block" id="streak-badge">🔥 streak: <span id="streak-count">0</span></div>
+    </div>
+    <!--Tanishi-->
+    <div id="cipher-strip" style="display:none;"></div>
+    <!--honour-->
+    <div id="honour-bar" style="display:none;"></div>
+    <!--progress-->
+    <div id="progress-wrap" style="display:none;">
+        <div id="progress-track"></div>
+    </div>
+    <!--scr1:intro-->
+    <div class="screen active" id="screen-intro">
+        <div class="parchment">
+            <div class="parchment-inner-border"></div>
+            <div class="corner tl">✦</div><div class="corner tr">✦</div>
+            <div class="corner bl">✦</div><div class="corner br">✦</div>
+
+            <span class="wizard-emoji reveal-line">🧙‍♂️</span>
+
+            <div class="title-hero reveal-line">A Mystery for</div>
+            <div class="title-hero reveal-line" style="color:var(--crimson);font-size:clamp(2.2rem,6.5vw,4rem)">Tanishi</div>
+            <div class="title-sub reveal-line">Scholar - Detective - Birthday Girl</div>
+
+            <div class="divider reveal-line">⸻ ✦ ⸻</div>
+
+            <div class="intro-body reveal-line">
+                Hear ye, <span class="name-glow">Tanishi</span>! The Wizard Aurelion hath locked
+                thy birthday surprise behind <strong>Five Sealed Chambers</strong>. But these are no
+                ordinary riddles — thou must don thy detective's cloak and investigate across
+                realms both ancient and modern.<br><br>
+                <em>Thy weapons: a sharp mind, the web's vast Oracle, and thine own eyes.</em>
+            </div>
+            <div class="case-dossier reveal-line">
+                <div class="case-row"><span class="case-key">CASE NO.:</span> BDQUEST-2025-🎂</div>
+                <div class="case-row"><span class="case-key">DETECTIVE:</span> Tanishi (most brilliant in the realm)</div>
+                <div class="case-row"><span class="case-key">CHAMBERS:</span> V (Classic Riddle · Earth Hunt · Wikipedia Crypt · Source Code · Final Mystery)</div>
+                <div class="case-row"><span class="case-key">HONOUR:</span> ⚜️⚜️⚜️ (spend wisely on hints)</div>
+                <div class="case-row"><span class="case-key">CIPHER:</span> Collect letters after each chamber — they spell a secret name</div>
+                <div class="case-row"><span class="case-key">INSIGHT:</span> First-try answers earn bonus points; 3-streak restores honour</div>
+                <div class="case-row"><span class="case-key">WARNING:</span> Wrong answers shall be met with medieval judgement</div>
+            </div>
+            <div class="divider reveal-line">⸻ ✦ ⸻</div>        
+            <div class="btn-row reveal-line">
+                <button class="btn btn-gold" onclick="startGame()">🔍 &nbsp; Open the Case File</button>
+            </div>
+        </div>
+    </div>
+    <!--scr2 riddle-->
+    <div class="screen" id="screen-riddle">
+        <div class="parchment" id="riddle-card">
+            <div class="parchment-inner-border"></div>
+            <div class="corner tl">✦</div><div class="corner tr">✦</div>
+
+            <div style="text-align:center; margin-bottom:8px;">
+                <span class="quest-badge" id="quest-badge"></span>
+            </div>
+            <div class="chamber-title" id="chamber-title"></div>
+            <div class="chamber-num" id="chamber-num"></div>
+
+            <!--type specific(js injected)-->
+            <div id="chamber-content"></div>
+            <!--ans-->
+            <div class="answer-wrap">
+                <input type="text" class="answer-input" id="answer-input"
+                  placeholder="Enter thy answer here..."
+                  onkeydown="if(event.key==='Enter') checkAnswer()"
+                  autocomplete="off" spellcheck="false">
+                <button class="btn btn-gold" onclick="checkAnswer()">Submit ⚔️</button>
+            </div>
+
+            <div class="feedback" id="feedback"></div>
+
+            <div class="btn-row">
+                <button class="btn btn-hint" id="hint-btn" onclick="getHint()">💡 Beg a Hint (costs ⚜️)</button>
+            </div>
+        </div>
+    </div>
+    <!--scr3 victory-->
+    <div class="screen" id="screen-victory">
+        <div class="parchment" id="victory-card">
+            <div class="parchment-inner-border"></div>
+            <div class="corner tl">✦</div><div class="corner tr">✦</div>
+            <div class="corner bl">✦</div><div class="corner br">✦</div>
+
+            <span class="victory-crown">👑</span>
+            <div class="title-hero" style="margin-bottom:4px;">Case Closed!</div>
+            <div class="title-sub">The Wizard's Secrets Are Yours</div>
+            <div class="divider">⸻ ✦ ⸻</div>
+            <div class="chamber-title" style="font-size:1.3rem;">🎂 The Birthday Surprise 🎂</div>
+            <div class="bday-msg" id="bday-msg"></div>
+            <div class="divider">⸻ ✦ ⚜️ ✦ ⸻</div>
+            <div class="rank-badge" id="rank-badge"></div>
+
+            <div class="btn-row" style="margin-top: 20px;">
+                <button class="btn btn-gold" onclick="restartGame()">🔄 &nbsp; Replay the Quest</button>
+            </div>
+        </div>
+    </div>
+    <!--evidence-->
+    <div id="evidence-log">
+        <div class="evidence-title">📂 &nbsp; Detective's Evidence Log</div>
+        <div id="evidence-items"></div>
+    </div>
+</div><!--/game-->
+<script>
+//riddle data
+const CHAMBERS =[
+    // chamber I
+    {
+        type:'riddle',
+        badge:'📜 Classic Riddle',
+        badgeClass:'badge-riddle',
+        title:'The Chamber of Echoes',
+        art:'🏰',
+        clue:`I speak without a mouth,\nI hear without ears.\nI dwell in your castles,\nIn mountains and mere.\nCall out to me boldly — I'll answer thee back,\nBut never start talking; that skill I do lack.\n\nWhat am I?`,
+        typewriter:true,
+        answers:['echo','an echo'],
+        hint:'The wizard whispers: "Search Google for — riddle speaks without mouth hears without ears answer" — and the answer shall reveal itself.',
+        hintLink:'https://www.google.com/search?q=riddle+speaks+without+mouth+hears+without+ears+answer',
+        hintLinkLabel: 'Consult the Web Oracle 🔍',
+        wrongLines: [
+            'The stone walls of the castle laugh at thee — even they know the answer!',
+            'The echo itself is confused. It repeated thy wrong answer back just to mock thee.',
+            'Sir Reginald of the Riddle Guard hath locked the gate and gone for tea.',
+            'The court scribe hath logged this error in the Tome of Shame. Vol. XIV, no less.',
+        ],
+        evidenceNote: 'I: Echo — "That which repeats but never initiates"',
+
+
+
+    },
+    //chmber II
+    {
+        type:'maps',
+        badge: '🌍 Digital Earth Hunt',
+        badgeClass: 'badge-maps',
+        title:'The Cartographer\'s Trial',
+        art:'🌍',
+        earthLink: 'https://earth.google.com/web/@27.168,78.044,0a,14000a,0d,35y',
+        mapsLink: 'https://www.google.com/maps/@27.168,78.044,13z/data=!3m1!1e3',
+        scratchLabel: '🔍 Scratch the wax seal to read where to begin',
+        mapIntro: `The wizard burned the coordinates — but left a trail in verse. Thy task is not to guess from poetry alone: thou must <strong>fly over the land digitally</strong>, explore the satellite imagery, and read the <em>exact word(s) written</em> upon the map when thou findest the place the fragments describe.`,
+        mapClue: `<strong>Fragment I — Where to Fly</strong><br>
+In a republic whose flag bears a wheel of law, seek the north.<br>
+Find a river holy enough to wash away sins — follow its silver thread<br>
+past a city an emperor once named after himself.<br><br>
+<strong>Fragment II — What to Seek</strong><br>
+Along that river, look for a perfect square of gardens —<br>
+a pearl-and-ivory complex with four slender towers at the corners<br>
+and a great dome that catches the sun upon the water.<br>
+It is grief built in stone; not a fort, not a mosque.<br><br>
+<strong>Fragment III — What to Read</strong><br>
+The verses only bring thee to the doorstep.<br>
+<em>Zoom closer.</em> Switch to satellite. Glide until cartographers' labels<br>
+appear upon the image itself — ink floating over the roof of the wonder.<br>
+Submit <strong>exactly what is written there</strong>, as thou seest it spelled.`,
+        earthMission: [
+      'Open <strong>Google Earth</strong> (or Maps in satellite view) — the link drops thee beside a river; pan and zoom along the water in both directions.',
+      'Match what thou seest to the fragments — seek the garden-square, the towers, the dome upon the bank.',
+      'Descend low — tilt, rotate, inspect — until a <em>written label</em> appears on the satellite image.',
+      'Read that label aloud. Type the word(s) exactly as the map spells them. Do not invent; do not paraphrase.',
+        ],
+        huntSteps:[
+            'Scratch the sealed chart and memorise all three fragments.',
+            'Launch the digital globe below — explore from where it places thee until the verses match the land.',
+            'Find the structure the fragments describe; zoom until text is written upon it.',
+            'Return here with the <strong>written word(s)</strong> thou read from the imagery.',
+        ],
+        answers:['taj mahal', 'the taj mahal', 'taj-mahal', 'tajmahal'],
+        hints: [
+            'If thou seest no label, thou art too high or too far from the structure — descend and keep following the water.',
+            'Do not answer from memory or from the verses alone. Glide until the map itself prints words upon the roof thou findest.',
+        ],
+        wrongLines: [
+            'Thou art guessing from the verses — the wizard demands the word <em>written on the map</em>. Zoom closer.',
+            'That is a city or a river label, not the text printed upon the structure itself.',
+            'The chart is still sealed. Scratch it before thou takest flight.',
+            'Wrong country entirely. Return to Fragment I and fly again.',
+            'Close in spirit — but not the exact spelling the cartographers printed. Read the label again.',
+            'Didst thou truly descend to satellite view? The word appears only when thou art near enough to read.',
+        ],
+        evidenceNote: 'II: Words read from the sky — "Found by exploring Google Earth, not by guesswork"'
+
+
+
+    },
+    //chamber III
+    {
+        type:'wiki',
+        badge:'📖 Wikipedia Crypt Hunt',
+        badgeClass: 'badge-wiki',
+        title: 'The Folklore Archive',
+        art:'📖',
+        wikiUrl:'https://en.wikipedia.org/wiki/Issun-b%C5%8Dshi',
+        wikiTitle:'Issun-bōshi',
+        personalNote: `Tanishi — when thou wert small, thou didst love the old stories. The wizard remembered. He placed one word inside a long scroll every scholar trusts — not at the top, not in the title. Thou knowest it already; it is no pronoun, no trick of language, nothing thou must look up in a dictionary. Read the whole article as thou always have when a book was worth finishing.`,
+        huntSteps:[
+            'Open the enchanted scroll below. It is long. That is the point.',
+            'Read it <strong>from the first line to the last</strong> — synopsis, songs, nursery tales, interpretation, footnotes. Skip nothing.',
+            'Do <strong>not</strong> search within the page, ask an oracle, or skim for shortcuts. The wizard shall know.',
+            'Somewhere in that full reading, one word will catch thy eye — utterly familiar, the kind thou hast said and written without ever needing to define it.',
+            'When thou hast truly read the scroll and found that word, speak it here (one word, or its full title).',
+        ],
+        riddle: `Before thou wert a detective, thou wert a reader.<br>
+The wizard left thee one assignment:<br><br>
+Go to the scroll marked below. Read <strong>every section</strong> —<br>
+not the headline alone, but the whole wandering article<br>
+from crown to colophon.<br><br>
+The inch-high boy in that tale is not thy answer.<br>
+But where scholars compare him to other tiny heroes of old Japan,<br>
+there sits a single word — one thou knowest <em>very well</em>.<br>
+It is no pronoun. No "he," no "she," no "they."<br>
+No trick of grammar to puzzle over. Just a plain word<br>
+thou hast met a thousand times before.<br><br>
+Find it only by reading. Then return and speak it.`,
+        typewriter: true,
+        answers:[
+            'tanishi', 'tanishi choja', 'tanishi choja', 'tanishichoja',
+            'tanishi chōja', 'tanishi chōja', 'the tanishi choja','tanishimahaur','tanishi mahaur',
+        ],
+        hints:[
+            'The wizard chose one long Wikipedia article about a fairy-tale boy born no taller than three centimetres. Read the <em>entire</em> page — every heading — as thou would read a chapter before an exam.',
+            'When folklorists list other heroes born strangely small, they name many kin in a single passage. One entry is a word thou already know by heart — not a pronoun, not the inch-high boy himself.',
+            'That word may appear beside an old tale-title — two words together, the second a rank of sorts. Keep reading until it simply jumps off the page.',
+        ],
+        wrongLines:[
+            'The wizard folds his arms. "Didst thou read the whole scroll — or only the opening?"',
+            'That is the hero of the article, not the word buried in the scholars\' footnotes.',
+            'No shortcuts. Return to the scroll and read until the very end.',
+            'The answer is not on Google. It lives in one long article — and thou hast not met it yet.',
+            'That is a pronoun or a trick of grammar — the wizard asked for a plain word thou knowest well.',
+            'Close, but not the familiar word hidden in that scroll.',
+        ],
+        evidenceNote: 'III: A familiar word in the folktale archive — "Found only by reading the whole scroll"',
+    },
+    //chamber IV
+    {
+        type:'source',
+        badge: '💻 Source Code Hunt',
+        badgeClass:'badge-code',
+        title:'The Enchanted Scroll\'s Secret',
+        art:'📜',
+        codeClue: 'The wizard hath inscribed a secret word into the very FIRST LINE of this enchanted document — the raw code that underlies this entire quest. To reveal it, thou must peer behind the veil of the page itself.',
+        instructions: [
+            {label: 'Windows / Linux',cmd:'Ctrl+U'},
+            {label:'Mac', cmd:'⌘ + Option + U'},
+            {label: 'Any browser', cmd: 'Right-click anywhere → "View Page Source"'},
+        ],
+        terminalPreview: 'Line 1 of the ancient scroll: <!-- 🔮 WIZARD\'S SECRET INSCRIPTION: ?????? -->',
+        hint: 'The answer is a single word in ALL CAPS hidden inside a comment on line 1 of the page\'s source code. Press Ctrl+U (Windows) or Cmd+Option+U (Mac) right now!',
+        answers: ['aurelion', 'AURELION'],
+        wrongLines:[
+            'The source code itself is shaking its head at thee.',
+            'Thou hath looked but not truly SEEN. The first line awaits.',
+            'The Wizard\'s comment is right there, line 1. The very first thing. Go back and look!',
+            'A junior apprentice who never wrote code in his life found it immediately. Reflect.',
+        ],
+        evidenceNote:'IV: AURELION — "The wizard\'s true name, hidden in plain sight"',
+
+    },
+    // chamber V
+    {
+        type:'final',
+        badge:'👑 The Final Mystery',
+        badgeClass: 'badge-final',
+        title: 'The Crown\'s Last Cipher',
+        art: '🎂',
+        clue: `I arrive but once in each year's great turning,\nWrapped in candles, in cake, and in song.\nI'm the reason this quest hath been burning,\nThe secret thou'st sought all along.\n\nI visit all mortals — the wise and the free —\nTanishi celebrates me today with great glee.\nFour syllables? No — just two will suffice.\n\nWhat am I? (The answer is rather nice.)`,
+        typewriter: true,
+        answers: ['birthday', 'birth day', 'a birthday', 'her birthday','birth'],
+        hint: 'The Wizard smiles: "What does one celebrate when they were born into this world exactly N years ago today?" Think of the day itself…',
+        wrongLines:[
+            'The birthday cake hath melted in embarrassment.',
+            'The wizard hath facepalmed so hard his hat fell off.',
+            'It is literally the reason for this entire quest. Ponder that.',
+            'Even the candles on the cake know the answer. They are very small and smart.',
+        ],
+        evidenceNote: 'V: Birthday — "The annual celebration of Tanishi\'s arrival in this world"',
+
+    },
+];
+//wrong line sufixes
+const SUFFIXES=[
+    'Try again, brave detective!',
+    'The case remains unsolved!',
+    'Steel thyself and attempt once more!',
+    'The chamber holds its secret still!',
+];
+//state
+let curIdx = 0;
+let honour = 3;
+let wrongCount = [0,0,0,0,0];
+let firstTry = [true,true,true,true,true];
+let evidence = [];
+let typewriterTimer = null;
+let detectiveScore = 0;
+let streak = 0;
+let startTime = null;
+let timerInterval = null;
+const CIPHER_NAME = 'TANISHI';
+let cipherFound = 0;
+let hintLevels = [0,0,0,0,0];
+
+// Web Audio SFX
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+function playTone(freq, dur, type='sine', vol=0.08){
+  try {
+    if(!audioCtx) audioCtx = new AudioCtx();
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.type=type; o.frequency.value=freq;
+    g.gain.setValueAtTime(vol, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime+dur);
+  } catch(e){}
+}
+function sfxCorrect(){ playTone(523,.12); setTimeout(()=>playTone(659,.15),80); setTimeout(()=>playTone(784,.2),160); }
+function sfxWrong(){ playTone(180,.25,'sawtooth',0.05); }
+function sfxSeal(){ playTone(330,.08,'triangle',0.06); setTimeout(()=>playTone(440,.1),90); }
+function sfxVictory(){ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>playTone(f,.22),i*120));}
+// Sparks
+(function(){
+  const box = document.getElementById('sparks');
+  for(let i=0;i<18;i++){
+    const s=document.createElement('div');
+    s.className='spark';
+    const sz=Math.random()*3+1;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;animation-duration:${(Math.random()*8+6).toFixed(1)}s;animation-delay:${(Math.random()*8).toFixed(1)}s;`;
+    box.appendChild(s);
+  }
+})();
+//progress
+function buildProgress(){
+  const track=document.getElementById('progress-track');
+  track.innerHTML='';
+  const icons=['🏰','🌍','📖','📜','🎂'];
+  const labels=['Echoes','Earth','Folktale','Scroll','Crown'];
+  icons.forEach((ic,i)=>{
+    const node=document.createElement('div');
+    node.className='prog-node';
+    const iconDiv=document.createElement('div');
+    iconDiv.className='prog-icon'+(i<curIdx?' done':i===curIdx?' active':'');
+    iconDiv.textContent=ic;
+    node.appendChild(iconDiv);
+    track.appendChild(node);
+    if(i<4){
+      const str=document.createElement('div');
+      str.className='prog-string'+(i<curIdx?' done':'');
+      track.appendChild(str);
+    }
+  });
+}
+//honour
+function updateHonour(){
+    const bar=document.getElementById('honour-bar');
+    bar.innerHTML='Honour: '+'⚜️'.repeat(Math.max(0,honour))+'🩶'.repeat(Math.max(0,3-honour))+'&nbsp; ';
+    const hBtn=document.getElementById('hint-btn');
+    if(hBtn){ hBtn.disabled=honour<=0; hBtn.style.opacity=honour<=0?'0.35':'1'; }
+}
+function updateDetectiveHud(){
+    const pct=Math.min(100, detectiveScore);
+    document.getElementById('detective-meter-fill').style.width=pct+'%';
+    document.getElementById('detective-score').textContent=detectiveScore;
+    const sb=document.getElementById('streak-badge');
+    document.getElementById('streak-count').textContent=streak;
+    sb.classList.toggle('hot', streak>=2);
+}
+function buildCipherStrip(){
+    const strip=document.getElementById('cipher-strip');
+    strip.innerHTML='';
+    CIPHER_NAME.split('').forEach((ch,i)=>{
+        const chip=document.createElement('div');
+        chip.className='cipher-slot'+(i<cipherFound?' found':'');
+        chip.textContent=i<cipherFound?ch:'?';
+        chip.title=i<cipherFound?'Letter secured':'Letter hidden in a chamber';
+        strip.appendChild(chip);
+    });
+}
+function startTimer(){
+    clearInterval(timerInterval);
+    startTime=Date.now();
+    timerInterval=setInterval(()=>{
+        const s=Math.floor((Date.now()-startTime)/1000);
+        const m=String(Math.floor(s/60)).padStart(2,'0');
+        const sec=String(s%60).padStart(2,'0');
+        document.getElementById('timer-display').textContent=m+':'+sec;
+    },1000);
+}
+function showFirstTryToast(){
+    const t=document.getElementById('first-try-toast');
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),2200);
+}
+function playSealTransition(chamberNum, cb){
+    const overlay=document.getElementById('seal-overlay');
+    const disc=document.getElementById('seal-disc');
+    const msg=document.getElementById('seal-msg');
+    const arts=['🏰','🌍','📖','📜','🎂'];
+    disc.textContent='🔒';
+    disc.classList.remove('breaking');
+    msg.textContent=`Chamber ${chamberNum} — the wax seal trembles…`;
+    overlay.classList.add('active');
+    sfxSeal();
+    setTimeout(()=>{
+        disc.textContent=arts[chamberNum-1]||'🔒';
+        msg.textContent='The seal shatters!';
+        disc.classList.add('breaking');
+        sfxSeal();
+    },700);
+    setTimeout(()=>{
+        overlay.classList.remove('active');
+        disc.classList.remove('breaking');
+        cb?.();
+    },1500);
+}
+//screen switch
+function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s=>{ s.classList.remove('active'); s.style.display='none'; });
+    const el=document.getElementById(id);
+    el.style.display='flex';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('active')));
+}
+//intro
+function triggerReveal(){
+    document.querySelectorAll('#screen-intro .reveal-line').forEach((el,i)=>{
+        setTimeout(()=>el.classList.add('vis'), 180+i*170);
+    });
+}
+triggerReveal();
+
+//start the game bruh
+function startGame(){
+    curIdx=0; honour=3; wrongCount=[0,0,0,0,0]; firstTry=[true,true,true,true,true];
+    evidence=[]; detectiveScore=0; streak=0; cipherFound=0; hintLevels=[0,0,0,0,0];
+    document.getElementById('honour-bar').style.display='flex';
+    document.getElementById('detective-hud').style.display='flex';
+    document.getElementById('cipher-strip').style.display='flex';
+    document.getElementById('progress-wrap').style.display='block';
+    document.getElementById('evidence-log').style.display='none';
+    buildCipherStrip();
+    updateDetectiveHud();
+    startTimer();
+    showScreen('screen-riddle');
+    playSealTransition(1, loadChamber);
+}
+
+//load chamber
+function loadChamber(){
+    const ch=CHAMBERS[curIdx];
+    document.getElementById('quest-badge').textContent=ch.badge;
+    document.getElementById('quest-badge').className='quest-badge '+ch.badgeClass;
+    document.getElementById('chamber-title').textContent=ch.title;
+    document.getElementById('chamber-num').textContent=`Chamber ${curIdx+1} of 5`;
+    document.getElementById('answer-input').value='';
+    clearFeedback();
+    buildProgress();
+    updateHonour();
+    buildChambercontent(ch);
+    setTimeout(()=>{ const inp=document.getElementById('answer-input'); if(inp)inp.focus(); },350);
+}
+
+//build chamber content
+function buildChambercontent(ch){
+    const box=document.getElementById('chamber-content');
+    box.innerHTML='';
+    if(ch.type==='riddle'||ch.type==='final'){
+        const verse=document.createElement('div');
+        verse.className='clue-verse';
+        verse.id='clue-verse-inner';
+        verse.innerHTML='';
+        box.appendChild(verse);
+        if(ch.typewriter){
+            typewriterEffect(verse, ch.clue.replace(/\n/g,'<br>'));
+        } else {
+            verse.innerHTML=ch.clue.replace(/\n/g,'<br>');
+        }
+        if(ch.type==='final'){
+            const art=document.createElement('div');
+            art.style.cssText='text-align:center;font-size:3.5rem;margin:10px 0;animation:wizFloat 3s ease-in-out infinite;filter:drop-shadow(0 0 14px rgba(240,192,64,0.6));';
+            art.textContent=ch.art;
+            box.insertBefore(art,verse);
+        }
+    }
+    else if(ch.type==='maps'){
+        if(ch.mapIntro){
+            const intro=document.createElement('div');
+            intro.className='clue-verse';
+            intro.style.fontStyle='normal';
+            intro.innerHTML=ch.mapIntro;
+            box.appendChild(intro);
+        }
+        const wrap=document.createElement('div');
+        wrap.className='scratch-wrap';
+        const card=document.createElement('div');
+        card.className='map-card';
+        card.innerHTML=`
+        <div class="coord-label">📜 Sealed Cartographer's Chart</div>
+        <div class="map-clue-text">${ch.mapClue}</div>
+        `;
+        wrap.appendChild(card);
+        const hintEl=document.createElement('div');
+        hintEl.className='scratch-hint';
+        hintEl.textContent=ch.scratchLabel||'🔍 Scratch to reveal the verses';
+        wrap.appendChild(hintEl);
+        const canvas=document.createElement('canvas');
+        canvas.className='scratch-canvas';
+        wrap.appendChild(canvas);
+        box.appendChild(wrap);
+        setTimeout(()=>initScratchCard(wrap, canvas), 80);
+
+        if(ch.earthMission){
+            const earth=document.createElement('div');
+            earth.className='earth-card';
+            earth.innerHTML=`<div class="earth-card-title">🛰️ Flight mission — read what is written</div>`;
+            const list=document.createElement('ul');
+            list.className='earth-step-list';
+            ch.earthMission.forEach((step,i)=>{
+                const li=document.createElement('li');
+                li.className='earth-step-item';
+                li.id='earth-step-'+i;
+                li.innerHTML=`<span class="earth-check">◇</span><span>${step}</span>`;
+                list.appendChild(li);
+            });
+            earth.appendChild(list);
+            box.appendChild(earth);
+        }
+        if(ch.huntSteps){
+            const steps=document.createElement('ol');
+            steps.className='hunt-steps';
+            ch.huntSteps.forEach((step,i)=>{
+                const li=document.createElement('li');
+                li.className='hunt-step';
+                li.innerHTML=`<span class="hunt-step-num">${i+1}</span><span>${step}</span>`;
+                steps.appendChild(li);
+            });
+            box.appendChild(steps);
+        }
+        const btnRow=document.createElement('div');
+        btnRow.className='btn-row';
+        btnRow.style.margin='6px 0 0';
+        let btns='';
+        if(ch.earthLink){
+            btns+=`<a href="${ch.earthLink}" target="_blank" rel="noopener">
+                <button class="btn btn-earth">🌍 &nbsp; Open Google Earth</button>
+            </a>`;
+        }
+        if(ch.mapsLink){
+            btns+=`<a href="${ch.mapsLink}" target="_blank" rel="noopener">
+                <button class="btn btn-maps">🛰️ &nbsp; Maps (Satellite)</button>
+            </a>`;
+        }
+        btns+=`<button class="btn btn-copy" id="earth-explored-btn" onclick="markEarthExplored()">✓ &nbsp; I found the written label</button>`;
+        btnRow.innerHTML=btns;
+        box.appendChild(btnRow);
+
+        const tip=document.createElement('div');
+        tip.className='search-anachronism';
+        tip.style.marginTop='8px';
+        tip.textContent='The globe opens beside a river bend — not atop any label. Explore, zoom, and read what the map prints when thou findest the place.';
+        box.appendChild(tip);
+        const ph=document.getElementById('answer-input');
+        if(ph) ph.placeholder='Type the word(s) written on the map…';
+
+
+
+    }
+    else if(ch.type==='wiki'){
+        if(ch.personalNote){
+            const note=document.createElement('div');
+            note.className='wiki-personal';
+            note.innerHTML=ch.personalNote;
+            box.appendChild(note);
+        }
+
+        const wikiCard=document.createElement('div');
+        wikiCard.className='wiki-card';
+        wikiCard.innerHTML=`
+        <div class="wiki-header">
+            <span class="wiki-w">W</span>
+            <span>Enchanted Scroll:</span>
+            <span class="wiki-title">${ch.wikiTitle}</span>
+        </div>
+        <div style="font-size:0.82rem;color:#54595d;font-style:italic;">Read the <strong>entire</strong> article — every section, top to bottom. No find-in-page.</div>
+        `;
+        box.appendChild(wikiCard);
+        
+        const riddleEl=document.createElement('div');
+        riddleEl.className='wiki-riddle';
+        riddleEl.id='wiki-riddle-inner';
+        box.appendChild(riddleEl);
+        if(ch.typewriter) typewriterEffect(riddleEl, ch.riddle);
+        else riddleEl.innerHTML=ch.riddle;
+
+        const steps=document.createElement('ol');
+        steps.className='hunt-steps';
+        ch.huntSteps.forEach((step,i)=>{
+            const li=document.createElement('li');
+            li.className='hunt-step';
+            li.innerHTML=`<span class="hunt-step-num">${i+1}</span><span>${step}</span>`;
+            steps.appendChild(li);
+        });
+        box.appendChild(steps);
+
+        const oath=document.createElement('label');
+        oath.className='wiki-oath';
+        oath.innerHTML=`<input type="checkbox" id="wiki-oath-check">
+            <span>I swear to read the <em>whole</em> scroll — every section — and not search within the page or ask an oracle until I have finished.</span>`;
+        box.appendChild(oath);
+
+        const btnRow=document.createElement('div');
+        btnRow.className='btn-row';
+        btnRow.style.margin='8px 0 0';
+        btnRow.innerHTML=`
+        <a href="${ch.wikiUrl}" target="_blank" rel="noopener">
+            <button class="btn btn-wiki">📖 &nbsp; Open the Enchanted Scroll</button>
+        </a>
+        <button class="btn btn-copy" id="wiki-opened-btn" onclick="markWikiOpened()">✓ &nbsp; I have read the entire article</button>
+        `;
+        box.appendChild(btnRow);
+
+
+
+    }
+    else if(ch.type==='search'){
+        const ana=document.createElement('div');
+        ana.className='search-anachronism';
+        ana.textContent='[The wizard hath somehow acquired access to modern technology…]';
+        box.appendChild(ana);
+        const gCard=document.createElement('div');
+        gCard.className='search-card';
+        gCard.innerHTML=`
+        <div class="google-g">G</div>
+        <div class="search-query">${ch.searchQuery}</div>
+        `;
+        box.appendChild(gCard);
+        const clue=document.createElement('div');
+        clue.className='clue-verse';
+        clue.innerHTML=`<em>${ch.searchClue}</em>`;
+        box.appendChild(clue);
+        const btnRow=document.createElement('div');
+        btnRow.className='btn-row';
+        btnRow.style.margin='4px 0 0';
+        btnRow.innerHTML=`
+        <a href="${ch.searchLink}" target="_blank" rel="noopener">
+            <button class="btn btn-search">🔍 &nbsp; Search Google</button>
+        </a>
+        <button class="btn btn-copy" onclick="copySearch('${ch.searchQuery}')">📋 &nbsp; Copy Query</button>
+        `;
+        box.appendChild(btnRow);
+        if(ch.quickPicks){
+            const picks=document.createElement('div');
+            picks.className='quick-picks';
+            ch.quickPicks.forEach(opt=>{
+                const b=document.createElement('button');
+                b.type='button';
+                b.className='quick-pick';
+                b.textContent=opt;
+                b.onclick=()=>{ document.getElementById('answer-input').value=opt; checkAnswer(); };
+                picks.appendChild(b);
+            });
+            box.appendChild(picks);
+        }
+    }
+    else if(ch.type==='source'){
+        //clue text
+        const clueEl=document.createElement('div');
+        clueEl.className='clue-verse';
+        clueEl.innerHTML=`<em>${ch.codeClue}</em>`;
+        box.appendChild(clueEl);
+        //terminal card
+        const term=document.createElement('div');
+        term.className='terminal-card';
+        let instrHTML=ch.instructions.map(ins=>`
+        <div class="term-line"><span style="color:var(--term-dim)">  ▶ </span><span style="color:#a0ffb0">${ins.label}:</span> <span class="key-combo">${ins.cmd}</span></div>
+        `).join('');
+        term.innerHTML=`
+        <div class="term-header">
+            <div class="term-dot" style="background:#ff5f56"></div>
+            <div class="term-dot" style="background:#ffbd2e"></div>
+            <div class="term-dot" style="background:#27c93f"></div>
+            <span style="color:var(--term-dim);font-family:'Special Elite',monospace;font-size:0.75rem;margin-left:8px;">scroll_inspector.sh</span>
+        </div>
+        <div class="term-line dim">$ VIEW PAGE SOURCE — HOW TO ACCESS:</div>
+        ${instrHTML}
+        <div class="term-line" style="margin-top:10px;color:#ffcc00;">⚠ &nbsp; Seek line 1 of the source. Look for the WORD in CAPS.</div>
+        <div class="term-line dim" style="margin-top:12px;">$ peek --line 1 tanishi_birthday_quest.html</div>
+        <div class="term-line cursor-blink">${ch.terminalPreview}</div>
+        `;
+        box.appendChild(term);
+    }
+}
+//scratch card
+function initScratchCard(wrap, canvas){
+    const card=wrap.querySelector('.map-card');
+    const rect=card.getBoundingClientRect();
+    canvas.width=rect.width;
+    canvas.height=rect.height;
+    const ctx=canvas.getContext('2d');
+    ctx.fillStyle='#2a1a0a';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='rgba(201,162,39,0.85)';
+    ctx.font='bold 14px Cinzel, serif';
+    ctx.textAlign='center';
+    ctx.fillText('SCRATCH TO REVEAL', canvas.width/2, canvas.height/2);
+    let scratching=false, revealed=false;
+    function scratch(x,y){
+        if(revealed) return;
+        ctx.globalCompositeOperation='destination-out';
+        ctx.beginPath();
+        ctx.arc(x,y,22,0,Math.PI*2);
+        ctx.fill();
+        const img=ctx.getImageData(0,0,canvas.width,canvas.height);
+        let clear=0;
+        for(let i=3;i<img.data.length;i+=4) if(img.data[i]===0) clear++;
+        if(clear/(canvas.width*canvas.height)>0.42){
+            revealed=true;
+            wrap.classList.add('scratch-revealed');
+            sfxSeal();
+        }
+    }
+    function pos(e){
+        const r=canvas.getBoundingClientRect();
+        const t=e.touches?e.touches[0]:e;
+        return { x:t.clientX-r.left, y:t.clientY-r.top };
+    }
+    canvas.onmousedown=e=>{ scratching=true; const p=pos(e); scratch(p.x,p.y); };
+    canvas.onmousemove=e=>{ if(scratching){ const p=pos(e); scratch(p.x,p.y); } };
+    canvas.onmouseup=canvas.onmouseleave=()=>{ scratching=false; };
+    canvas.ontouchstart=e=>{ e.preventDefault(); scratching=true; const p=pos(e); scratch(p.x,p.y); };
+    canvas.ontouchmove=e=>{ e.preventDefault(); if(scratching){ const p=pos(e); scratch(p.x,p.y); } };
+    canvas.ontouchend=()=>{ scratching=false; };
+}
+
+
+//typewriter effect
+function typewriterEffect(el, html){
+    //preserve <br> tags for line breaks
+    const parts=html.split('<br>');
+    let lineIdx=0, charIdx=0;
+    el.innerHTML='';
+    function type(){    
+        if(lineIdx>=parts.length){ el.innerHTML=html; return; }
+        const line=parts[lineIdx];
+        if(charIdx<line.length){
+            const currentLines=parts.slice(0,lineIdx).join('<br>');
+            const currentChar=line.slice(0,charIdx+1);
+            el.innerHTML=(currentLines?currentLines+'<br>':'')+currentChar;
+            charIdx++;
+            typewriterTimer=setTimeout(type,22);
+        } else{
+            lineIdx++; charIdx=0;
+            el.innerHTML=parts.slice(0,lineIdx).join('<br>');
+            typewriterTimer=setTimeout(type, lineIdx<parts.length?120:0);
+        }
+    }
+    type(); 
+}
+
+//copy search query
+function normalizeAnswer(s){
+    return s.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+        .replace(/\s+/g,' ').trim();
+}
+function answersMatch(raw, answers){
+    const n=normalizeAnswer(raw);
+    const compact=n.replace(/\s/g,'');
+    return answers.some(a=>{
+        const na=normalizeAnswer(a);
+        const compactA=na.replace(/\s/g,'');
+        return n==na || compact===compactA ||
+            (compact.length>=4 && (compact.includes(compactA) || compactA.includes(compact)));
+    });
+}
+
+function markEarthExplored(){
+    document.querySelectorAll('.earth-step-item').forEach(s=>{
+        s.classList.add('done');
+        const chk=s.querySelector('.earth-check');
+        if(chk) chk.textContent='✓';
+
+    });
+    const btn=document.getElementById('earth-explored-btn');
+    if(btn) btn.textContent='✅ Label read — submit the written word(s)';
+    sfxSeal();
+    showFeedback('🛰️ &nbsp; <em>Good. Submit exactly what the satellite map printed upon the wonder — letter for letter.</em>', 'hint-fb')
+
+}
+
+function markWikiOpened(){
+    const chk=document.getElementById('wiki-oath-check');
+    if(!chk?.checked){
+        showFeedback('📜 &nbsp; <em>The wizard will not accept shortcuts. Swear the oath first — then return when thou hast read every section.</em>','hint-fb');
+        return;
+    }
+    document.querySelectorAll('.hunt-step').forEach(s=>s.classList.add('done'));
+    const btn=document.getElementById('wiki-opened-btn')||event.target;
+    btn.textContent='✅ Whole scroll read — speak the word thou found';
+    sfxSeal();
+    showFeedback('📖 &nbsp; <em>Good. Now submit the familiar word thou found — the one thou knowest well.</em>', 'hint-fb');
+}
+
+function copySearch(q){
+    navigator.clipboard.writeText(q).then(()=>{
+        const btn=event.target; btn.textContent='✅ Copied!';
+        setTimeout(()=>btn.textContent='📋  Copy Query',1800);
+    }).catch(()=>{
+        const btn=event.target; btn.textContent='📋  '+q;
+    });
+}
+
+//check asweers
+
+function checkAnswer(){
+    const raw=document.getElementById('answer-input').value.trim().toLowerCase();
+    if(!raw) return;
+    const ch=CHAMBERS[curIdx];
+    const correct=answersMatch(raw, ch.answers);
+
+    if(correct){
+        if(typewriterTimer){clearTimeout(typewriterTimer); typewriterTimer=null;}
+        sfxCorrect();
+        let bonusMsg='';
+        if(firstTry[curIdx]){
+            detectiveScore=Math.min(100, detectiveScore+20);
+            streak++;
+            showFirstTryToast();
+            if(streak>=3 && honour<3){ honour++; bonusMsg=' &nbsp; <em>Streak of 3 — honour restored!</em>'; }
+            else bonusMsg=' &nbsp; <em>+20 Insight (first try!)</em>';
+
+        }else{
+            detectiveScore=Math.min(100,detectiveScore+20);
+            streak=0;
+            bonusMsg=' &nbsp; <em>+10 Insight</em>';
+        }
+        if(cipherFound<CIPHER_NAME.length){
+            const lettersToAdd = (curIdx===4) ? Math.min(3, CIPHER_NAME.length-cipherFound) : 1;
+            cipherFound = Math.min(CIPHER_NAME.length, cipherFound + lettersToAdd);
+            buildCipherStrip();
+            if(cipherFound===CIPHER_NAME.length) bonusMsg+=' &nbsp; <strong>The name TANISHI is complete!</strong>';
+
+        }
+        updateDetectiveHud();
+        showFeedback('✅ &nbsp; Brilliantly deduced! The chamber unseals!'+bonusMsg, 'correct');
+        flashGold();
+        evidence.push(ch.evidenceNote);
+        updateEvidenceLog();
+        setTimeout(()=>{
+            curIdx++;
+            if(curIdx>=CHAMBERS.length) showVictory();
+            else playSealTransition(curIdx+1,loadChamber);
+
+        },1600);
+    }else{
+        firstTry[curIdx]=false;
+        streak=0;
+        updateDetectiveHud();
+        sfxWrong();
+        const wl=ch.wrongLines[wrongCount[curIdx]%ch.wrongLines.length];
+        wrongCount[curIdx]++;
+        const sfx=SUFFIXES[Math.floor(Math.random()*SUFFIXES.length)];
+        showFeedback(`❌ &nbsp; ${wl} <em style="opacity:0.7"> — ${sfx}</em>`, 'wrong');
+        shakeCard();
+    }
+
+}
+
+//hint
+function getHint(){
+    if(honour<=0) return;
+    const ch=CHAMBERS[curIdx];
+    honour--;
+    updateHonour();
+    let hintText;
+    if(ch.hints && ch.hints.length){
+        const lvl=hintLevels[curIdx]||0;
+        hintText=ch.hints[Math.min(lvl,ch.hints.length-1)];
+        if(lvl < ch.hints.length-1) hintLevels[curIdx]=lvl+1;
+        hintText=`💡 Hint ${lvl+1} of ${ch.hints.length}: <em>${hintText}</em>`;
+    } else{
+        hintText=`💡 &nbsp; <em>${ch.hint}</em>`;
+        if(ch.hintLink){
+            hintText+=` &nbsp; <a href="${ch.hintLink}" target="_blank" rel="noopener" style="color:var(--google-blue);font-style:normal;font-size:0.85em;">[${ch.hintLinkLabel||'Open link →'}]</a>`;
+
+        }
+    }
+    showFeedback(hintText,'hint-fb');
+}
+
+//evidence log
+function updateEvidenceLog(){
+    const log=document.getElementById('evidence-log');
+    const items=document.getElementById('evidence-items');
+    log.style.display='block';
+    items.innerHTML='';
+    evidence.forEach(e=>{
+        const div=document.createElement('div');
+        div.className='evidence-item';
+        div.innerHTML=`<span class="evidence-stamp">✅</span><span>${e}</span>`;
+        items.appendChild(div);
+    });
+}
+
+//feedback
+function showFeedback(msg,type){
+    const fb=document.getElementById('feedback');
+    fb.className='feedback show '+type;
+    fb.innerHTML=msg;
+}
+function clearFeedback(){
+    const fb=document.getElementById('feedback');
+    fb.className='feedback'; fb.innerHTML='';
+}
+
+//vfx
+function shakeCard(){
+    const c=document.getElementById('riddle-card');
+    c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake');
+}
+function flashGold(){
+    const c=document.getElementById('riddle-card');
+    c.classList.remove('gold-flash'); void c.offsetWidth; c.classList.add('gold-flash');
+}
+//victory
+function showVictory(){
+    clearInterval(timerInterval);
+    cipherFound=CIPHER_NAME.length;
+    buildCipherStrip();
+    sfxVictory();
+    document.getElementById('honour-bar').style.display='none';
+    document.getElementById('detective-hud').style.display='none';
+    document.getElementById('cipher-strip').style.display='none';
+    document.getElementById('progress-wrap').style.display='none';
+
+    const elapsed=document.getElementById('timer-display').textContent;
+    const firstTries=firstTry.filter(Boolean).length;
+    const ranks={
+        100:'Legendary Master Sleuth 🏆',
+        80:'Grand Archmage of Wisdom ⚜️',
+        60:'Knight-Scholar of High Honour ⚔️',
+        40:'Brave Detective of the Realm 🔍',
+        0:'Honourable Survivor of the Chambers 😅'
+    };
+    const rankKey=Object.keys(ranks).map(Number).sort((a,b)=>b-a).find(k=>detectiveScore>=k)||0;
+    const honourRanks={3:'(hints barely needed)',2:'(sharp mind)',1:'(hints were useful)',0:'(hints saved the day)'};
+
+    document.getElementById('bday-msg').innerHTML=`
+        The five chambers lie open, their secrets surrendered! <strong>Tanishi</strong> hath proved
+        herself not just a scholar, but a true detective across time itself — consulting
+        ancient maps, hunting through Wikipedia's folklore archives, and even peering behind
+        the fabric of enchanted scrolls!<br><br>
+        The Wizard Aurelion rises from his throne and declares with great ceremony:<br><br>
+        <em>"Dearest Tanishi — may your ${new Date().getFullYear()} birthday bring you as much
+        joy as your brilliance brings to everyone lucky enough to know you.
+        May this year be filled with adventures worthy of a true scholar-detective,
+        discoveries that light up your eyes, and celebrations as grand as the
+        mysteries you just conquered."</em><br><br>
+        🎂 &nbsp; <strong>Happy Birthday, Tanishi!</strong> &nbsp; 🎂<br><br>
+        The realm is genuinely a better place because you're in it. 🌟✨
+    `;
+    document.getElementById('rank-badge').innerHTML=
+        `Rank: <strong>${ranks[rankKey]}</strong> &nbsp;|&nbsp; Insight: ${detectiveScore}/100 &nbsp;|&nbsp; Time: ${elapsed} &nbsp;|&nbsp; First-try solves: ${firstTries}/5 &nbsp;|&nbsp; Honour: ${'⚜️'.repeat(honour)||'—'} ${honourRanks[honour]||''}`;
+
+    showScreen('screen-victory');
+    launchConfetti();
+}
+
+
+//confetti
+
+let confettiLoop;
+function launchConfetti(){
+    clearTimeout(confettiLoop);
+    const box=document.getElementById('confetti-box');
+    box.innerHTML='';
+    const cols=['#c9a227','#f0c040','#8b0000','#cc2200','#1a5c2a','#2a9c4a','#4285f4','#ea4335','#fbbc04','#34a853'];
+    for(let i=0;i<140;i++){
+        const c=document.createElement('div');
+        c.className='confetto';
+        const w=Math.random()*10+5, h=w*(Math.random()*1.8+0.5);
+        c.style.cssText=`left:${Math.random()*100}%;width:${w}px;height:${h}px;background:${cols[Math.floor(Math.random()*cols.length)]};border-radius:${Math.random()>0.5?'50%':'2px'};animation-duration:${(Math.random()*2.5+2).toFixed(1)}s;animation-delay:${(Math.random()*3).toFixed(1)}s;transform:rotate(${Math.random()*360}deg);`;
+        box.appendChild(c);
+    }
+    confettiLoop=setTimeout(launchConfetti, 6000);
+}
+
+//restart
+
+function restartGame(){
+    clearTimeout(confettiLoop);
+    clearInterval(timerInterval);
+    document.getElementById('confetti-box').innerHTML='';
+    document.getElementById('evidence-log').style.display='none';
+    document.getElementById('evidence-items').innerHTML='';
+    document.getElementById('honour-bar').style.display='none';
+    document.getElementById('detective-hud').style.display='none';
+    document.getElementById('cipher-strip').style.display='none';
+    document.getElementById('progress-wrap').style.display='none';
+    showScreen('screen-intro');
+    setTimeout(()=>{
+        document.querySelectorAll('#screen-intro .reveal-line').forEach(el=>el.classList.remove('vis'));
+        setTimeout(triggerReveal,50);
+    },100);
+}
+
+    
+    
+
+
+</script>
+</body> 
+</html>
